@@ -1,20 +1,17 @@
 package ru.netology.testing.uiautomator;
 
 import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.MobileElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.junit.*;
-import org.openqa.selenium.By;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.support.ui.ExpectedConditions;
+import ru.netology.testing.uiautomator.pages.MainPage;
 import org.junit.Assert;
-import java.util.concurrent.TimeUnit;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 public class SampleTest {
 
     private AndroidDriver driver;
+    private MainPage mainPage;
 
     private URL getUrl() {
         try {
@@ -34,72 +31,32 @@ public class SampleTest {
         desiredCapabilities.setCapability("automationName", "UiAutomator2");
         desiredCapabilities.setCapability("newCommandTimeout", 3600);
 
-        driver = new AndroidDriver(this.getUrl(), desiredCapabilities);
-        driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
+        driver = new AndroidDriver(getUrl(), desiredCapabilities);
+        mainPage = new MainPage(driver);
     }
 
     @Test
     public void testWhitespaceOnlyDoesNotChangeText() {
 
-        WebDriverWait wait = new WebDriverWait(driver, 5);
-
-        MobileElement inputField = (MobileElement) wait.until(
-                ExpectedConditions.presenceOfElementLocated(
-                        By.id("ru.netology.testing.uiautomator:id/userInput")
-                )
-        );
-        inputField.clear();
-
-        MobileElement changeButton = (MobileElement) driver.findElement(
-                By.id("ru.netology.testing.uiautomator:id/buttonChange")
-        );
-        changeButton.click();
-
-        MobileElement textView = (MobileElement) wait.until(
-                ExpectedConditions.presenceOfElementLocated(
-                        By.id("ru.netology.testing.uiautomator:id/userInput")
-                )
-        );
+        mainPage.clearInput();
+        mainPage.clickChangeButton();
 
         Assert.assertEquals("Текст не должен измениться при вводе только пробелов",
                 "Type something…",
-                textView.getText());
+                mainPage.getInputText());
     }
 
     @Test
     public void testTextAppearsInNewActivity() {
-        WebDriverWait wait = new WebDriverWait(driver, 10);
 
         String testText = "Hello Appium!";
 
+        mainPage.enterText(testText);
+        mainPage.clickActivityButton();
 
-        MobileElement inputField = (MobileElement) wait.until(
-                ExpectedConditions.presenceOfElementLocated(
-                        By.id("ru.netology.testing.uiautomator:id/userInput")
-                )
-        );
-        inputField.isDisplayed();
-        inputField.click();
-        inputField.sendKeys(testText);
+        String actualText = mainPage.getResultText();
 
-        MobileElement openButton = (MobileElement) wait.until(
-                ExpectedConditions.elementToBeClickable(
-                        By.id("ru.netology.testing.uiautomator:id/buttonActivity")
-                )
-        );
-        openButton.isDisplayed();
-        openButton.click();
-
-        try { Thread.sleep(2000); } catch (InterruptedException e) {}
-
-        MobileElement resultText = (MobileElement) wait.until(
-                ExpectedConditions.presenceOfElementLocated(
-                        By.id("ru.netology.testing.uiautomator:id/text")
-                )
-        );
-        resultText.isDisplayed();
-
-        Assert.assertEquals(testText, resultText.getText());
+        Assert.assertEquals(testText, actualText);
     }
 
     @After
